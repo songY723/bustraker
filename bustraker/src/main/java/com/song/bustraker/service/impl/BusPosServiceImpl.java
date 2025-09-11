@@ -1,12 +1,12 @@
-package com.song.bustraker.service;
+package com.song.bustraker.service.impl;
 
+import com.song.bustraker.dto.BusPosDto;
+import com.song.bustraker.service.BusPosService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 import org.w3c.dom.*;
-
-import com.song.bustraker.dto.BusPosDto;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -17,7 +17,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Service
-public class BusService {
+public class BusPosServiceImpl implements BusPosService {
 
     private static final String API_URL = "http://openapitraffic.daejeon.go.kr/api/rest/busposinfo/getBusPosByRtid";
 
@@ -26,13 +26,11 @@ public class BusService {
 
     private final RestTemplate restTemplate = new RestTemplate();
 
+    @Override
     public List<BusPosDto> getBusPositions(String busRouteId) throws Exception {
-
-        // URL 인코딩 (serviceKey + busRouteId)
         String encodedKey = URLEncoder.encode(serviceKey, StandardCharsets.UTF_8);
         String encodedRouteId = URLEncoder.encode(busRouteId, StandardCharsets.UTF_8);
 
-        // 요청 URL 생성
         String url = UriComponentsBuilder.fromUriString(API_URL)
                 .queryParam("serviceKey", encodedKey)
                 .queryParam("busRouteId", encodedRouteId)
@@ -40,17 +38,14 @@ public class BusService {
 
         System.out.println("요청 URL: " + url);
 
-        // API 호출
         String responseXml = restTemplate.getForObject(url, String.class);
         System.out.println("응답 XML: " + responseXml);
 
-        // XML 파싱
         DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
         DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
         Document doc = dBuilder.parse(new ByteArrayInputStream(responseXml.getBytes(StandardCharsets.UTF_8)));
         doc.getDocumentElement().normalize();
 
-        // 실제 버스 정보는 <item> 태그 안에 있음
         NodeList nList = doc.getElementsByTagName("item");
         List<BusPosDto> busList = new ArrayList<>();
 
@@ -77,7 +72,6 @@ public class BusService {
         return busList;
     }
 
-    // null-safe 태그 값 추출
     private static String getTagValue(String tag, Element element) {
         NodeList nodeList = element.getElementsByTagName(tag);
         if (nodeList.getLength() == 0) return null;
@@ -86,5 +80,3 @@ public class BusService {
         return node.getFirstChild().getNodeValue();
     }
 }
-
-
