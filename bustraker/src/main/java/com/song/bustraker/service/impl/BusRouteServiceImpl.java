@@ -1,7 +1,7 @@
 package com.song.bustraker.service.impl;
 
-import com.song.bustraker.dto.BusStopDto;
-import com.song.bustraker.service.BusStopService;
+import com.song.bustraker.dto.BusRouteDto;
+import com.song.bustraker.service.BusRouteService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.w3c.dom.*;
@@ -19,19 +19,19 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Service
-public class BusStopServiceImpl implements BusStopService {
+public class BusRouteServiceImpl implements BusRouteService {
 
     @Value("${bus.api.key}")
     private String serviceKey;
 
-    private static final String API_URL = "http://openapitraffic.daejeon.go.kr/api/rest/busRouteInfo/getStaionByRoute";
+    private static final String API_URL = "http://openapitraffic.daejeon.go.kr/api/rest/busRouteInfo/getRouteInfoAll";
 
     @Override
-    public List<BusStopDto> getStationsByRoute(String busRouteId) {
-        List<BusStopDto> stationList = new ArrayList<>();
+    public List<BusRouteDto> getAllRoutes() {
+        List<BusRouteDto> routes = new ArrayList<>();
         try {
-            String urlStr = API_URL + "?busRouteId=" + busRouteId + "&serviceKey=" + serviceKey + "&reqPage=1";
-            System.out.println("요청 URL: " + urlStr);
+            String urlStr = API_URL + "?serviceKey=" + serviceKey + "&reqPage=1";
+           
 
             URL url = new URL(urlStr);
             HttpURLConnection conn = (HttpURLConnection) url.openConnection();
@@ -51,18 +51,18 @@ public class BusStopServiceImpl implements BusStopService {
             conn.disconnect();
 
             String responseXml = sb.toString();
-            System.out.println("응답 XML: " + responseXml);
+            
 
-            stationList = parseStations(responseXml);
+            routes = parseRoutes(responseXml);
 
         } catch (Exception e) {
             e.printStackTrace();
         }
-        return stationList;
+        return routes;
     }
 
-    private List<BusStopDto> parseStations(String xml) {
-        List<BusStopDto> stations = new ArrayList<>();
+    private List<BusRouteDto> parseRoutes(String xml) {
+        List<BusRouteDto> routes = new ArrayList<>();
         try {
             DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
             DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
@@ -74,18 +74,17 @@ public class BusStopServiceImpl implements BusStopService {
                 Node node = nList.item(i);
                 if (node.getNodeType() == Node.ELEMENT_NODE) {
                     Element el = (Element) node;
-                    BusStopDto stop = new BusStopDto();
-                    stop.setStopId(getTagValue("BUS_STOP_ID", el));
-                    stop.setStopName(getTagValue("BUSSTOP_NM", el));
-                    stop.setGpsLati(getTagValue("GPS_LATI", el));
-                    stop.setGpsLong(getTagValue("GPS_LONG", el));
-                    stations.add(stop);
+                    BusRouteDto dto = new BusRouteDto();
+                    dto.setRouteId(getTagValue("ROUTE_CD", el));
+                    dto.setRouteName(getTagValue("ROUTE_NO", el));
+                    dto.setRouteType(getTagValue("ROUTE_TP", el));
+                    routes.add(dto);
                 }
             }
         } catch (Exception e) {
             e.printStackTrace();
         }
-        return stations;
+        return routes;
     }
 
     private static String getTagValue(String tag, Element element) {

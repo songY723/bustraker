@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Insert title here</title>
+</head>
+<body>
+<h1>정류장 목록</h1>
+<ul id="stationsList"></ul>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    const params = new URLSearchParams(window.location.search);
+    const routeId = params.get('routeId');
+    if(routeId) {
+        fetchStations(routeId);
+    } else {
+        document.getElementById('stationsList').innerHTML = '<li>노선이 선택되지 않았습니다.</li>';
+    }
+});
+</script>
+<script src="stations.js"></script>
+</body>
+</html>
