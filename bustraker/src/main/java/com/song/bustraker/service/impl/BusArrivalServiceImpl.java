@@ -9,6 +9,7 @@ import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -18,6 +19,7 @@ import org.w3c.dom.NodeList;
 import com.song.bustraker.dto.ArrivalInfoDto;
 import com.song.bustraker.service.BusArrivalService;
 
+@Service
 public class BusArrivalServiceImpl implements BusArrivalService {
 
 	 @Value("${bus.api.key}")

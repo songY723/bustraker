@@ -8,7 +8,6 @@ import com.song.bustraker.service.BusArrivalService;
 import com.song.bustraker.service.BusPosService;
 import com.song.bustraker.service.BusRouteService;
 import com.song.bustraker.service.BusStopService;
-import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -39,7 +38,7 @@ public class BusController {
         return busRouteService.getAllRoutes();
     }
 
-    // 2️⃣ 특정 노선의 정류장 목록 조회 → stations.jsp로 전달
+    // 2️⃣ 특정 노선의 정류장 목록 조회 → stations.html로 전달
     @GetMapping("/api/stations")
     public List<BusStopDto> getStationsJson(@RequestParam String busRouteId) {
         return busStopService.getStationsByRoute(busRouteId);
