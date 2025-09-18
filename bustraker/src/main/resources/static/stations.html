@@ -2,13 +2,29 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>정류장 목록</title>
-
-
+<style>
+  body { font-family: Arial, sans-serif; padding: 20px; }
+  h1, h2 { color: #333; }
+  ul { list-style: none; padding-left: 0; }
+  li { margin: 5px 0; }
+</style>
 </head>
 <body>
-<h1>정류장 목록</h1>
-<ul id="stationsList"></ul>
+  <h1>정류장 목록</h1>
+
+  <div id="upSection">
+    <h2>상행</h2>
+    <ul id="stationsUp">
+      <li>상행 정류장 없음</li>
+    </ul>
+  </div>
+
+  <div id="downSection" style="margin-top:20px;">
+    <h2>하행</h2>
+    <ul id="stationsDown">
+      <li>하행 정류장 없음</li>
+    </ul>
+  </div>
 
 <script src="js/stations.js"></script>
 </body>

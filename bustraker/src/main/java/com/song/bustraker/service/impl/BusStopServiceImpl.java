@@ -31,7 +31,7 @@ public class BusStopServiceImpl implements BusStopService {
         List<BusStopDto> stationList = new ArrayList<>();
         try {
             String urlStr = API_URL + "?busRouteId=" + busRouteId + "&serviceKey=" + serviceKey + "&reqPage=1";
-            System.out.println("요청 URL: " + urlStr);
+           // System.out.println("요청 URL: " + urlStr);
 
             URL url = new URL(urlStr);
             HttpURLConnection conn = (HttpURLConnection) url.openConnection();
@@ -51,7 +51,7 @@ public class BusStopServiceImpl implements BusStopService {
             conn.disconnect();
 
             String responseXml = sb.toString();
-            System.out.println("응답 XML: " + responseXml);
+            //System.out.println("응답 XML: " + responseXml);
 
             stationList = parseStations(responseXml);
 
@@ -75,10 +75,20 @@ public class BusStopServiceImpl implements BusStopService {
                 if (node.getNodeType() == Node.ELEMENT_NODE) {
                     Element el = (Element) node;
                     BusStopDto stop = new BusStopDto();
+
                     stop.setStopId(getTagValue("BUS_STOP_ID", el));
                     stop.setStopName(getTagValue("BUSSTOP_NM", el));
                     stop.setGpsLati(getTagValue("GPS_LATI", el));
                     stop.setGpsLong(getTagValue("GPS_LONG", el));
+
+                    // 상하행 안전 처리
+                    stop.setUdType(parseIntOrDefault(getTagValue("ud_type", el), 0));
+                    stop.setDir(parseIntOrDefault(getTagValue("DIR", el), 0));
+
+                    // 순서(SEQUENCE) 처리
+                    stop.setSeq(parseIntOrDefault(getTagValue("SEQ", el), i + 1));
+
+                    System.out.println("로드된 정류장: " + stop);
                     stations.add(stop);
                 }
             }
@@ -86,6 +96,16 @@ public class BusStopServiceImpl implements BusStopService {
             e.printStackTrace();
         }
         return stations;
+    }
+
+    // Null 빈 문자열을 기본값으로 안전하게 처리하는 메서드
+    private int parseIntOrDefault(String value, int defaultVal) {
+        if (value == null || value.isEmpty()) return defaultVal;
+        try {
+            return Integer.parseInt(value);
+        } catch (NumberFormatException e) {
+            return defaultVal;
+        }
     }
 
     private static String getTagValue(String tag, Element element) {

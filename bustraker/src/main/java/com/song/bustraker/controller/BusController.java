@@ -46,7 +46,7 @@ public class BusController {
 
 
     // 3️⃣ 특정 노선 버스 실시간 위치 조회 → JSON 반환
-    @GetMapping("/bus")
+    @GetMapping("/api/bus")
     public List<BusPosDto> getBusPositions(@RequestParam String busRouteId) throws Exception {
         return busPosService.getBusPositions(busRouteId);
     }

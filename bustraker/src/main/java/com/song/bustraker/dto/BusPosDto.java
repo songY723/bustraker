@@ -4,7 +4,7 @@ public class BusPosDto {
     private String arrTime;
     private String busNodeId;
     private String busStopId;
-    private String dir;
+    private int dir; 
     private String evtCd;
     private String gpsLati;
     private String gpsLong;
@@ -12,7 +12,7 @@ public class BusPosDto {
     private String routeCd;
     private String streDt;
     private String totalDist;
-    private String udType;
+    private int udType; 
 
     // getter & setter 전부 생성
     public String getArrTime() { return arrTime; }
@@ -24,8 +24,7 @@ public class BusPosDto {
     public String getBusStopId() { return busStopId; }
     public void setBusStopId(String busStopId) { this.busStopId = busStopId; }
 
-    public String getDir() { return dir; }
-    public void setDir(String dir) { this.dir = dir; }
+
 
     public String getEvtCd() { return evtCd; }
     public void setEvtCd(String evtCd) { this.evtCd = evtCd; }
@@ -47,7 +46,18 @@ public class BusPosDto {
 
     public String getTotalDist() { return totalDist; }
     public void setTotalDist(String totalDist) { this.totalDist = totalDist; }
+	public int getDir() {
+		return dir;
+	}
+	public void setDir(int dir) {
+		this.dir = dir;
+	}
+	public int getUdType() {
+		return udType;
+	}
+	public void setUdType(int udType) {
+		this.udType = udType;
+	}
 
-    public String getUdType() { return udType; }
-    public void setUdType(String udType) { this.udType = udType; }
+
 }
