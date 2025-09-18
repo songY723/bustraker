@@ -1,12 +1,15 @@
+console.log("stations.js loaded");
+
 document.addEventListener("DOMContentLoaded", function() {
     const params = new URLSearchParams(window.location.search);
-    const routeId = params.get('routeId');
-
+    // busRouteId로 받아오기
+    const routeId = params.get('busRouteId');  
+    console.log("현재 URL:", window.location.href);
+    console.log("busRouteId 값:", routeId);
     if(routeId) {
-        fetchStationsInline(routeId);  // route.js에서 쓰던 그대로
+        fetchStationsInline(routeId);
     } else {
-        const list = document.getElementById('stationsList');
-        if(list) list.innerHTML = '<li>노선이 선택되지 않았습니다.</li>';
+        document.getElementById('stationsList').innerHTML = '<li>노선이 선택되지 않았습니다.</li>';
     }
 });
 
