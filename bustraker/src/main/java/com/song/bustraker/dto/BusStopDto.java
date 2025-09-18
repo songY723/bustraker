@@ -65,8 +65,6 @@ public class BusStopDto {
 	            ", gpsLati='" + gpsLati + '\'' +
 	            ", gpsLong='" + gpsLong + '\'' +
 	            ", seq=" + seq +
-	            ", udType=" + udType +
-	            ", dir=" + dir +
 	            '}';
 	}
 }

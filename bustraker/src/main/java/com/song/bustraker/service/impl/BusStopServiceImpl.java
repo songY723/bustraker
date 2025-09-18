@@ -81,10 +81,6 @@ public class BusStopServiceImpl implements BusStopService {
                     stop.setGpsLati(getTagValue("GPS_LATI", el));
                     stop.setGpsLong(getTagValue("GPS_LONG", el));
 
-                    // 상하행 안전 처리
-                    stop.setUdType(parseIntOrDefault(getTagValue("ud_type", el), 0));
-                    stop.setDir(parseIntOrDefault(getTagValue("DIR", el), 0));
-
                     // 순서(SEQUENCE) 처리
                     stop.setSeq(parseIntOrDefault(getTagValue("SEQ", el), i + 1));
 
