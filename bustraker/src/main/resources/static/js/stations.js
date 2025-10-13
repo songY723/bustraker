@@ -12,25 +12,6 @@ document.addEventListener("DOMContentLoaded", function () {
 
 let busPositions = [];
 
-// 🚍 데이터 로딩
-async function loadData(routeId) {
-  try {
-    // 1. 정류장 불러오기
-    const resStations = await fetch(`/api/stations?busRouteId=${routeId}`);
-    const stations = await resStations.json();
-
-    // 2. 버스 위치 불러오기
-    const resBus = await fetch(`/api/bus?busRouteId=${routeId}`);
-    busPositions = await resBus.json();
-
-    renderTable(stations);
-  } catch (err) {
-    console.error(err);
-    document.getElementById("stationTable").innerHTML =
-      "<tr><td colspan='6'>데이터를 불러오지 못했습니다.</td></tr>";
-  }
-}
-
 // 🕒 도착 시간 포맷 (yyyyMMddHHmmss → 남은시간)
 function formatArrTime(arrTime) {
   if (!arrTime) return "-";
@@ -45,11 +26,7 @@ function formatArrTime(arrTime) {
 
     const targetDate = new Date(year, month, day, hour, min, sec);
     const now = new Date();
-
-    const diffSec = Math.floor((targetDate - now) / 1000);
-
- 
-    //if (diffSec <= 60) return "곧 도착";
+    const diffSec = Math.floor((targetDate.getTime() - now.getTime()) / 1000);
 
     const m = Math.floor(diffSec / 60);
     const s = diffSec % 60;
@@ -60,81 +37,109 @@ function formatArrTime(arrTime) {
   }
 }
 
+// 🚍 데이터 로딩
+async function loadData(routeId) {
+  try {
+    // 1️⃣ 정류장 목록 불러오기
+    const resStations = await fetch(`/api/stations?busRouteId=${routeId}`);
+    const stations = await resStations.json();
+
+    // 2️⃣ 버스 위치 데이터 불러오기 (노선 내 현재 버스 위치)
+    const resBusPos = await fetch(`/api/busPositions?busRouteId=${routeId}`);
+    const busList = await resBusPos.json();
+
+    // 3️⃣ 버스 위치 매칭 (정류장 BUS_NODE_ID 기준)
+    stations.forEach(st => {
+      st.busPresent = busList.some(bus => bus.busNodeId === st.busNodeId);
+    });
+
+    // 4️⃣ 각 정류장 도착정보 불러오기 (BUS_NODE_ID 기준)
+    const arrivalPromises = stations.map(station =>
+      fetch(`/api/arrivalByStop?busNodeId=${station.busNodeId}`)
+        .then(res => res.json())
+        .then(arr => {
+          station.arrivalTime = arr[0]?.arrTime || null;
+          return station;
+        })
+        .catch(() => {
+          station.arrivalTime = null;
+          return station;
+        })
+    );
+
+    await Promise.all(arrivalPromises);
+
+    // 5️⃣ 테이블 렌더링
+    renderTable(stations);
+  } catch (err) {
+    console.error(err);
+    document.getElementById("stationTable").innerHTML =
+      "<tr><td colspan='6'>데이터를 불러오지 못했습니다.</td></tr>";
+  }
+}
+
 // 📋 테이블 렌더링
 function renderTable(stations) {
   const table = document.getElementById("stationTable");
   table.innerHTML = "";
 
-  if (stations.length === 0) {
+  if (!stations.length) {
     table.innerHTML = "<tr><td colspan='6'>정류장이 없습니다.</td></tr>";
     return;
   }
 
-  // 정류장 반 나누기 (상행/하행)
   const half = Math.ceil(stations.length / 2);
   const upStations = stations.slice(0, half);
   const downStations = stations.slice(half);
 
   for (let i = 0; i < half; i++) {
     const up = upStations[i];
-    const down = downStations[i] || {}; // 하행이 부족하면 빈 값 처리
+    const down = downStations[i] || {};
 
     const tr = document.createElement("tr");
 
-    // ⏱ 상행 도착시간
+    // 1️⃣ 상행 도착시간
     const tdUpTime = document.createElement("td");
-    const busesUp = busPositions.filter(
-      (bus) => bus.busStopId === up?.stopId && Number(bus.dir) === 0
-    );
-    tdUpTime.textContent = busesUp[0] ? formatArrTime(busesUp[0].arrTime) : "-";
+    tdUpTime.textContent = up?.arrivalTime ? formatArrTime(up.arrivalTime) : "-";
     tr.appendChild(tdUpTime);
 
-    // 🚌 상행 버스
+    // 2️⃣ 상행 🚌 (버스 위치 강조)
     const tdUpBus = document.createElement("td");
-    if (busesUp.length > 0) {
-      busesUp.forEach((bus) => {
-        const span = document.createElement("span");
-        span.className = "bus";
-        span.textContent = bus.plateNo;
-        tdUpBus.appendChild(span);
-      });
+    if (up?.busPresent) {
+      tdUpBus.innerHTML = "🚌";
+      tdUpBus.style.color = "red";
+      tdUpBus.style.fontWeight = "bold";
     } else {
-      tdUpBus.textContent = "-";
+      tdUpBus.innerHTML = "-";
     }
+    tdUpBus.classList.add("bus");
     tr.appendChild(tdUpBus);
 
-    // 🚏 상행 정류장
+    // 3️⃣ 상행 정류장
     const tdUpStation = document.createElement("td");
-    tdUpStation.textContent = up ? up.stopName : "-";
+    tdUpStation.textContent = up?.stopName || "-";
     tr.appendChild(tdUpStation);
 
-    // 🚏 하행 정류장
+    // 4️⃣ 하행 정류장
     const tdDownStation = document.createElement("td");
-    tdDownStation.textContent = down.stopName || "-";
+    tdDownStation.textContent = down?.stopName || "-";
     tr.appendChild(tdDownStation);
 
-    // 🚌 하행 버스
+    // 5️⃣ 하행 🚌 (버스 위치 강조)
     const tdDownBus = document.createElement("td");
-    const busesDown = busPositions.filter(
-      (bus) => bus.busStopId === down?.stopId && Number(bus.dir) === 1
-    );
-    if (busesDown.length > 0) {
-      busesDown.forEach((bus) => {
-        const span = document.createElement("span");
-        span.className = "bus";
-        span.textContent = bus.plateNo;
-        tdDownBus.appendChild(span);
-      });
+    if (down?.busPresent) {
+      tdDownBus.innerHTML = "🚌";
+      tdDownBus.style.color = "blue";
+      tdDownBus.style.fontWeight = "bold";
     } else {
-      tdDownBus.textContent = "-";
+      tdDownBus.innerHTML = "-";
     }
+    tdDownBus.classList.add("bus");
     tr.appendChild(tdDownBus);
 
-    // ⏱ 하행 도착시간
+    // 6️⃣ 하행 도착시간
     const tdDownTime = document.createElement("td");
-    tdDownTime.textContent = busesDown[0]
-      ? formatArrTime(busesDown[0].arrTime)
-      : "-";
+    tdDownTime.textContent = down?.arrivalTime ? formatArrTime(down.arrivalTime) : "-";
     tr.appendChild(tdDownTime);
 
     table.appendChild(tr);

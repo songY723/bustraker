@@ -76,15 +76,15 @@ public class BusStopServiceImpl implements BusStopService {
                     Element el = (Element) node;
                     BusStopDto stop = new BusStopDto();
 
-                    stop.setStopId(getTagValue("BUS_STOP_ID", el));
+                    stop.setStopId(getTagValue("stopId", el));
                     stop.setStopName(getTagValue("BUSSTOP_NM", el));
                     stop.setGpsLati(getTagValue("GPS_LATI", el));
                     stop.setGpsLong(getTagValue("GPS_LONG", el));
-
+                    stop.setBusNodeId(getTagValue("BUS_NODE_ID", el));
                     // 순서(SEQUENCE) 처리
                     stop.setSeq(parseIntOrDefault(getTagValue("SEQ", el), i + 1));
 
-                    System.out.println("로드된 정류장: " + stop);
+               
                     stations.add(stop);
                 }
             }

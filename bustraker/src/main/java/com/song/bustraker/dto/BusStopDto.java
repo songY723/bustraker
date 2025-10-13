@@ -6,6 +6,7 @@ public class BusStopDto {
     private String stopName; // 정류장 이름
     private String gpsLati;  // 위도
     private String gpsLong;  // 경도
+    private String busNodeId;
     private int seq;
     private int udType;
     private int dir; // 0=상행, 1=하행 ?
@@ -67,4 +68,13 @@ public class BusStopDto {
 	            ", seq=" + seq +
 	            '}';
 	}
+
+	public String getBusNodeId() {
+		return busNodeId;
+	}
+
+	public void setBusNodeId(String busNodeId) {
+		this.busNodeId = busNodeId;
+	}
+
 }

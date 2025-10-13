@@ -4,6 +4,7 @@ import com.song.bustraker.dto.ArrivalInfoDto;
 import com.song.bustraker.dto.BusPosDto;
 import com.song.bustraker.dto.BusRouteDto;
 import com.song.bustraker.dto.BusStopDto;
+import com.song.bustraker.dto.StationArrivalDto;
 import com.song.bustraker.service.BusArrivalService;
 import com.song.bustraker.service.BusPosService;
 import com.song.bustraker.service.BusRouteService;
@@ -29,7 +30,7 @@ public class BusController {
         this.busRouteService = busRouteService;
         this.busStopService = busStopService;
         this.busPosService = busPosService;
-		this.busArrivalService = busArrivalService;
+        this.busArrivalService = busArrivalService;
     }
 
     // 1️⃣ 전체 노선 목록 조회 
@@ -38,23 +39,28 @@ public class BusController {
         return busRouteService.getAllRoutes();
     }
 
-    // 2️⃣ 특정 노선의 정류장 목록 조회 → stations.html로 전달
+    // 2️⃣ 특정 노선의 정류장 목록 조회
     @GetMapping("/api/stations")
     public List<BusStopDto> getStationsJson(@RequestParam String busRouteId) {
         return busStopService.getStationsByRoute(busRouteId);
     }
 
-
-    // 3️⃣ 특정 노선 버스 실시간 위치 조회 → JSON 반환
-    @GetMapping("/api/bus")
+    // 3️⃣ 특정 노선 버스 실시간 위치 조회
+    @GetMapping("/api/busPositions")  // 이름 통일 (JS쪽과 동일)
     public List<BusPosDto> getBusPositions(@RequestParam String busRouteId) throws Exception {
         return busPosService.getBusPositions(busRouteId);
     }
 
-    // 정류장 클릭 시 도착 정보 조회
+    // 4️⃣ 특정 정류장의 도착정보 조회 (BUS_NODE_ID 기준)
     @GetMapping("/api/arrivalByStop")
-    public List<ArrivalInfoDto> getArrivalByStop(@RequestParam String busStopId) {
-        return busArrivalService.getArrivalInfoByStop(busStopId);
+    public List<ArrivalInfoDto> getArrivalByStop(@RequestParam String busNodeId) {
+        return busArrivalService.getArrivalInfoByStop(busNodeId);
+    }
+
+    // 5️⃣ 노선 전체의 정류장별 도착정보 조회
+    @GetMapping("/api/arrivalByRoute")
+    public List<StationArrivalDto> getArrivalByRoute(@RequestParam String busRouteId) {
+        return busArrivalService.getArrivalInfoByRoute(busRouteId);
     }
 }
 

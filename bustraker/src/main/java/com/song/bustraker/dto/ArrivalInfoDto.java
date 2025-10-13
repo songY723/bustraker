@@ -16,6 +16,8 @@ public class ArrivalInfoDto {
     private String routeTp;
     private String statusPos;
     private String stopName;
+    private String arrTime;
+    
 	public String getBusNodeId() {
 		return busNodeId;
 	}
@@ -105,5 +107,11 @@ public class ArrivalInfoDto {
 	}
 	public void setStopName(String stopName) {
 		this.stopName = stopName;
+	}
+	public String getArrTime() {
+		return arrTime;
+	}
+	public void setArrTime(String arrTime) {
+		this.arrTime = arrTime;
 	}
 }

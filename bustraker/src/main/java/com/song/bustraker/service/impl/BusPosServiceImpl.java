@@ -32,7 +32,7 @@ public class BusPosServiceImpl implements BusPosService {
         try {
             // serviceKey는 properties에 저장된 값을 그대로 사용 (이미 인코딩돼 있으면 그대로)
             String urlStr = API_URL + "?busRouteId=" + busRouteId + "&serviceKey=" + serviceKey;
-            System.out.println("BusPos 요청 URL: " + urlStr);
+           
 
             URL url = new URL(urlStr);
             HttpURLConnection conn = (HttpURLConnection) url.openConnection();
@@ -54,7 +54,7 @@ public class BusPosServiceImpl implements BusPosService {
             conn.disconnect();
 
             String responseXml = sb.toString();
-            System.out.println("BusPos 응답 XML: " + responseXml);
+            
 
             // XML 파싱
             DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
