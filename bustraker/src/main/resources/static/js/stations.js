@@ -54,18 +54,20 @@ async function loadData(routeId) {
     });
 
     // 4️⃣ 각 정류장 도착정보 불러오기 (BUS_NODE_ID 기준)
-    const arrivalPromises = stations.map(station =>
-      fetch(`/api/arrivalByStop?busNodeId=${station.busNodeId}`)
-        .then(res => res.json())
-        .then(arr => {
-          station.arrivalTime = arr[0]?.arrTime || null;
-          return station;
-        })
-        .catch(() => {
-          station.arrivalTime = null;
-          return station;
-        })
-    );
+	const arrivalPromises = stations.map(station =>
+	  fetch(`/api/arrivalByStop?busStopId=${station.stopId}&busRouteId=${routeId}`)
+	    .then(res => res.json())
+	    .then(arr => {
+	      if (arr && arr.length > 0) {
+	        const a = arr[0];
+	        // 백엔드에서 이미 해당 노선만 필터링된 상태
+	        station.arrivalText = `${a.extimeMin}분 ${a.extimeSec}초`;
+	      } else {
+	        station.arrivalText = "-";
+	      }
+	      return station;
+	    })
+	);
 
     await Promise.all(arrivalPromises);
 
@@ -100,7 +102,7 @@ function renderTable(stations) {
 
     // 1️⃣ 상행 도착시간
     const tdUpTime = document.createElement("td");
-    tdUpTime.textContent = up?.arrivalTime ? formatArrTime(up.arrivalTime) : "-";
+    tdUpTime.textContent = up?.arrivalText || "-";
     tr.appendChild(tdUpTime);
 
     // 2️⃣ 상행 🚌 (버스 위치 강조)
@@ -139,7 +141,7 @@ function renderTable(stations) {
 
     // 6️⃣ 하행 도착시간
     const tdDownTime = document.createElement("td");
-    tdDownTime.textContent = down?.arrivalTime ? formatArrTime(down.arrivalTime) : "-";
+    tdDownTime.textContent = down?.arrivalText || "-";
     tr.appendChild(tdDownTime);
 
     table.appendChild(tr);

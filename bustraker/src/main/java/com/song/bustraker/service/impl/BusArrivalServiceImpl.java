@@ -39,11 +39,11 @@ public class BusArrivalServiceImpl implements BusArrivalService {
     private static final String ROUTE_STATION_API_URL = "http://openapitraffic.daejeon.go.kr/api/rest/arrive/getRouteStationList";
 
     @Override
-    public List<ArrivalInfoDto> getArrivalInfoByStop(String busNodeId) {
+    public List<ArrivalInfoDto> getArrivalInfoByStop(String busStopId, String busRouteId) {
         List<ArrivalInfoDto> list = new ArrayList<>();
         try {
-            String urlStr = ARRIVAL_API_URL + "?serviceKey=" + serviceKey + "&BusNodeID=" + busNodeId;
-         
+            // ✅ 올바른 API URL
+            String urlStr = ARRIVAL_API_URL + "?serviceKey=" + serviceKey + "&busStopID=" + busStopId;
             URL url = new URL(urlStr);
             HttpURLConnection conn = (HttpURLConnection) url.openConnection();
             conn.setRequestMethod("GET");
@@ -55,38 +55,51 @@ public class BusArrivalServiceImpl implements BusArrivalService {
             BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8));
             StringBuilder sb = new StringBuilder();
             String line;
-            while ((line = reader.readLine()) != null) {
-                sb.append(line);
-            }
+            while ((line = reader.readLine()) != null) sb.append(line);
             reader.close();
             conn.disconnect();
 
-            String responseXml = sb.toString();
-           
-
-            Document doc = parseXml(responseXml);
+            Document doc = parseXml(sb.toString());
             NodeList nList = doc.getElementsByTagName("itemList");
 
             for (int i = 0; i < nList.getLength(); i++) {
                 Node node = nList.item(i);
                 if (node.getNodeType() == Node.ELEMENT_NODE) {
                     Element el = (Element) node;
-                    ArrivalInfoDto dto = new ArrivalInfoDto();
-                    dto.setBusStopId(getTagValue("BUS_STOP_ID", el));
-                    dto.setRouteNo(getTagValue("ROUTE_NO", el));
-                    dto.setExtimeMin(parseInt(getTagValue("EXTIME_MIN", el)));
-                    dto.setExtimeSec(parseInt(getTagValue("EXTIME_SEC", el)));
-                    dto.setArrTime(getTagValue("INFO_OFFER_TM", el));
-                    list.add(dto);
+                    String routeId = getTagValue("BUS_ROUTE_ID", el);
+
+                    // ✅ 현재 선택한 노선만 필터링
+                    if (busRouteId.equals(routeId)) {
+                        ArrivalInfoDto dto = new ArrivalInfoDto();
+                        dto.setBusStopId(getTagValue("BUS_STOP_ID", el));
+                        dto.setBusRouteId(routeId);
+                        dto.setRouteNo(getTagValue("ROUTE_NO", el));
+
+                        // 남은시간 관련 필드
+                        dto.setExtimeMin(parseIntSafe(getTagValue("EXTIME_MIN", el)));
+                        dto.setExtimeSec(parseIntSafe(getTagValue("EXTIME_SEC", el)));
+
+                        // 참고용 제공시각
+                        dto.setInfoOfferTm(getTagValue("INFO_OFFER_TM", el));
+
+                        list.add(dto);
+                    }
                 }
             }
-
-        
         } catch (Exception e) {
             e.printStackTrace();
         }
         return list;
     }
+
+    private int parseIntSafe(String val) {
+        try {
+            return val == null ? 0 : Integer.parseInt(val);
+        } catch (NumberFormatException e) {
+            return 0;
+        }
+    }
+
 
     @Override
     public List<StationArrivalDto> getArrivalInfoByRoute(String busRouteId) {

@@ -53,8 +53,10 @@ public class BusController {
 
     // 4️⃣ 특정 정류장의 도착정보 조회 (BUS_NODE_ID 기준)
     @GetMapping("/api/arrivalByStop")
-    public List<ArrivalInfoDto> getArrivalByStop(@RequestParam String busNodeId) {
-        return busArrivalService.getArrivalInfoByStop(busNodeId);
+    public List<ArrivalInfoDto> getArrivalByStop(
+            @RequestParam String busStopId,
+            @RequestParam String busRouteId) {
+        return busArrivalService.getArrivalInfoByStop(busStopId, busRouteId);
     }
 
     // 5️⃣ 노선 전체의 정류장별 도착정보 조회
