@@ -34,7 +34,7 @@ public class BusArrivalServiceImpl implements BusArrivalService {
     private final RestTemplate restTemplate = new RestTemplate();
 
     // 도착 정보 API (정류장별)
-    private static final String ARRIVAL_API_URL = "http://openapitraffic.daejeon.go.kr/api/rest/arrive/getArrInfoByStopID";
+    private static final String ARRIVAL_API_URL = "http://openapitraffic.daejeon.go.kr/api/rest/arrive/getArrInfoByUid";
     // 노선별 정류장 목록 API
     private static final String ROUTE_STATION_API_URL = "http://openapitraffic.daejeon.go.kr/api/rest/arrive/getRouteStationList";
 
@@ -43,7 +43,7 @@ public class BusArrivalServiceImpl implements BusArrivalService {
         List<ArrivalInfoDto> list = new ArrayList<>();
         try {
             // ✅ 올바른 API URL
-            String urlStr = ARRIVAL_API_URL + "?serviceKey=" + serviceKey + "&busStopID=" + busStopId;
+        	String url = ARRIVAL_API_URL + "?serviceKey=" + serviceKey + "&arsId=" + busStopId;
             URL url = new URL(urlStr);
             HttpURLConnection conn = (HttpURLConnection) url.openConnection();
             conn.setRequestMethod("GET");
