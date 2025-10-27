@@ -33,17 +33,17 @@ public class BusArrivalServiceImpl implements BusArrivalService {
 
     private final RestTemplate restTemplate = new RestTemplate();
 
-    // 도착 정보 API (정류장별)
+    // 도착 정보 API (정류장별, arsId 사용)
     private static final String ARRIVAL_API_URL = "http://openapitraffic.daejeon.go.kr/api/rest/arrive/getArrInfoByUid";
     // 노선별 정류장 목록 API
     private static final String ROUTE_STATION_API_URL = "http://openapitraffic.daejeon.go.kr/api/rest/arrive/getRouteStationList";
 
+    // 📌 정류장별 도착정보 조회 (5자리 arsId 사용)
     @Override
     public List<ArrivalInfoDto> getArrivalInfoByStop(String busStopId, String busRouteId) {
         List<ArrivalInfoDto> list = new ArrayList<>();
         try {
-            // ✅ 올바른 API URL
-        	String url = ARRIVAL_API_URL + "?serviceKey=" + serviceKey + "&arsId=" + busStopId;
+            String urlStr = ARRIVAL_API_URL + "?serviceKey=" + serviceKey + "&arsId=" + busStopId;
             URL url = new URL(urlStr);
             HttpURLConnection conn = (HttpURLConnection) url.openConnection();
             conn.setRequestMethod("GET");
@@ -66,83 +66,81 @@ public class BusArrivalServiceImpl implements BusArrivalService {
                 Node node = nList.item(i);
                 if (node.getNodeType() == Node.ELEMENT_NODE) {
                     Element el = (Element) node;
-                    String routeId = getTagValue("BUS_ROUTE_ID", el);
+                    String routeId = getTagValue("ROUTE_CD", el); // 노선 코드로 필터링
 
-                    // ✅ 현재 선택한 노선만 필터링
                     if (busRouteId.equals(routeId)) {
                         ArrivalInfoDto dto = new ArrivalInfoDto();
                         dto.setBusStopId(getTagValue("BUS_STOP_ID", el));
                         dto.setBusRouteId(routeId);
                         dto.setRouteNo(getTagValue("ROUTE_NO", el));
-
-                        // 남은시간 관련 필드
-                        dto.setExtimeMin(parseIntSafe(getTagValue("EXTIME_MIN", el)));
-                        dto.setExtimeSec(parseIntSafe(getTagValue("EXTIME_SEC", el)));
-
-                        // 참고용 제공시각
+                        
+                        // ⬅ 여기서 안전하게 분 단위 변환
+                        int extimeMin = parseIntSafe(getTagValue("EXTIME_MIN", el));
+                        if (extimeMin <= 0) {
+                            int extimeSec = parseIntSafe(getTagValue("EXTIME_SEC", el));
+                            extimeMin = (extimeSec / 60) + 1;  // 나머지는 버리고 +1분 추가
+                        }
+                        dto.setExtimeMin(extimeMin);
+                        
+                        dto.setDestination(getTagValue("DESTINATION", el));
+                       // dto.setExtimeMin(parseIntSafe(getTagValue("EXTIME_MIN", el)));
+                        //dto.setExtimeSec(parseIntSafe(getTagValue("EXTIME_SEC", el)));
                         dto.setInfoOfferTm(getTagValue("INFO_OFFER_TM", el));
 
                         list.add(dto);
                     }
                 }
             }
+
         } catch (Exception e) {
             e.printStackTrace();
         }
         return list;
     }
 
-    private int parseIntSafe(String val) {
-        try {
-            return val == null ? 0 : Integer.parseInt(val);
-        } catch (NumberFormatException e) {
-            return 0;
-        }
-    }
-
-
+    // 📌 노선별 정류장 정보 + 각 정류장 도착정보 조회
     @Override
     public List<StationArrivalDto> getArrivalInfoByRoute(String busRouteId) {
         List<StationArrivalDto> result = new ArrayList<>();
         try {
             String url = ROUTE_STATION_API_URL + "?serviceKey=" + serviceKey + "&busRouteId=" + busRouteId;
             String responseXml = restTemplate.getForObject(url, String.class);
-
             Document doc = parseXml(responseXml);
             NodeList nList = doc.getElementsByTagName("itemList");
 
-            //System.out.println("[DEBUG] getArrivalInfoByRoute(" + busRouteId + "): 총 " + nList.getLength() + " 정류장");
-
             for (int i = 0; i < nList.getLength(); i++) {
                 Node node = nList.item(i);
-                if (node.getNodeType() == Node.ELEMENT_NODE) {
-                    Element el = (Element) node;
+                if (node.getNodeType() != Node.ELEMENT_NODE) continue;
 
-                    // 🚍 정류장 정보 추출
-                    String stopId = getTagValue("BUSSTOP_ID", el); // 5자리 (참고용)
-                    String stopName = getTagValue("BUSSTOP_NM", el);
-                    String nodeId = getTagValue("BUS_NODE_ID", el); // 7자리 (실사용)
+                Element el = (Element) node;
 
-                    StationArrivalDto dto = new StationArrivalDto();
-                    dto.setStopId(stopId);
-                    dto.setStopName(stopName);
-                    dto.setNodeId(nodeId);
+                // ✅ 5자리 arsId (BUS_STOP_ID) 사용
+                String stopId = getTagValue("BUS_STOP_ID", el);
+                String stopName = getTagValue("BUSSTOP_NM", el);
 
-                    // ⚡ 각 정류장 도착정보 조회 (BUS_NODE_ID 기준)
-                    List<ArrivalInfoDto> arrivals = getArrivalInfoByStop(nodeId);
-                    dto.setArrivals(arrivals);
+                StationArrivalDto dto = new StationArrivalDto();
+                dto.setStopId(stopId);
+                dto.setStopName(stopName);
 
-                    result.add(dto);
+                // ✅ 도착 정보 조회 시 stopId (BUS_STOP_ID)를 사용해야 함!
+                List<ArrivalInfoDto> arrivals = getArrivalInfoByStop(stopId, busRouteId);
+                dto.setArrivals(arrivals);
 
-                   // System.out.println("[DEBUG] 정류장: " + stopName + " (" + nodeId + "), 도착정보: " + arrivals.size());
-                }
+                result.add(dto);
             }
 
         } catch (Exception e) {
             e.printStackTrace();
         }
-
         return result;
+    }
+
+    private int parseIntSafe(String val) {
+        try {
+            return val == null ? 0 : Integer.parseInt(val.trim());
+        } catch (NumberFormatException e) {
+            return 0;
+        }
     }
 
     private static String getTagValue(String tag, Element element) {
@@ -151,14 +149,6 @@ public class BusArrivalServiceImpl implements BusArrivalService {
         Node node = nodeList.item(0);
         if (node == null || node.getFirstChild() == null) return null;
         return node.getFirstChild().getNodeValue().trim();
-    }
-
-    private static int parseInt(String val) {
-        try {
-            return Integer.parseInt(val.trim());
-        } catch (Exception e) {
-            return 0;
-        }
     }
 
     private Document parseXml(String xml) throws Exception {
@@ -173,5 +163,6 @@ public class BusArrivalServiceImpl implements BusArrivalService {
         return doc;
     }
 }
+
 
 

@@ -10,68 +10,60 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 });
 
-let busPositions = [];
-
-// 🕒 도착 시간 포맷 (yyyyMMddHHmmss → 남은시간)
-function formatArrTime(arrTime) {
-  if (!arrTime) return "-";
-
-  try {
-    const year = parseInt(arrTime.substring(0, 4));
-    const month = parseInt(arrTime.substring(4, 6)) - 1; // JS는 0부터 시작
-    const day = parseInt(arrTime.substring(6, 8));
-    const hour = parseInt(arrTime.substring(8, 10));
-    const min = parseInt(arrTime.substring(10, 12));
-    const sec = parseInt(arrTime.substring(12, 14));
-
-    const targetDate = new Date(year, month, day, hour, min, sec);
-    const now = new Date();
-    const diffSec = Math.floor((targetDate.getTime() - now.getTime()) / 1000);
-
-    const m = Math.floor(diffSec / 60);
-    const s = diffSec % 60;
-    return `${m}분 ${s}초`;
-  } catch (e) {
-    console.error("formatArrTime error:", e, arrTime);
-    return "-";
-  }
-}
-
-// 🚍 데이터 로딩
+// 🚍 버스 데이터 및 도착정보 로드
 async function loadData(routeId) {
   try {
-    // 1️⃣ 정류장 목록 불러오기
+    // 1️⃣ 정류장 목록
     const resStations = await fetch(`/api/stations?busRouteId=${routeId}`);
     const stations = await resStations.json();
 
-    // 2️⃣ 버스 위치 데이터 불러오기 (노선 내 현재 버스 위치)
+    // 2️⃣ 현재 버스 위치
     const resBusPos = await fetch(`/api/busPositions?busRouteId=${routeId}`);
     const busList = await resBusPos.json();
 
-    // 3️⃣ 버스 위치 매칭 (정류장 BUS_NODE_ID 기준)
+    // 버스 위치 표시
     stations.forEach(st => {
       st.busPresent = busList.some(bus => bus.busNodeId === st.busNodeId);
     });
 
-    // 4️⃣ 각 정류장 도착정보 불러오기 (BUS_NODE_ID 기준)
-	const arrivalPromises = stations.map(station =>
-	  fetch(`/api/arrivalByStop?busStopId=${station.stopId}&busRouteId=${routeId}`)
-	    .then(res => res.json())
-	    .then(arr => {
-	      if (arr && arr.length > 0) {
-	        const a = arr[0];
-	        // 백엔드에서 이미 해당 노선만 필터링된 상태
-	        station.arrivalText = `${a.extimeMin}분 ${a.extimeSec}초`;
-	      } else {
-	        station.arrivalText = "-";
-	      }
-	      return station;
-	    })
-	);
+    // 3️⃣ 각 정류장 도착 정보 불러오기
+    const arrivalPromises = stations.map(station =>
+  fetch(`/api/arrivalByStop?busStopId=${station.stopId}&busRouteId=${routeId}`)
+    .then(res => res.json())
+    .then(arr => {
+      if (arr && arr.length > 0) {
+        const a = arr[0];
+        let extimeMin = 0;
+
+        // extimeMin > 0이면 그대로 사용
+        if (a.extimeMin > 0) {
+          extimeMin = a.extimeMin;
+        } 
+        // extimeMin 0이면 extimeSec를 분으로 변환
+        else if (a.extimeSec > 0) {
+          extimeMin = Math.ceil(a.extimeSec / 60);
+        }
+
+        // 도착 텍스트 설정
+        if (extimeMin > 0) {
+          station.arrivalText = `${extimeMin}분`;
+        } else {
+          station.arrivalText = "곧 도착";
+        }
+      } else {
+        station.arrivalText = "-";
+      }
+      return station;
+    })
+    .catch(() => {
+      station.arrivalText = "-";
+      return station;
+    })
+);
 
     await Promise.all(arrivalPromises);
 
-    // 5️⃣ 테이블 렌더링
+    // 4️⃣ 테이블 렌더링
     renderTable(stations);
   } catch (err) {
     console.error(err);
@@ -105,15 +97,11 @@ function renderTable(stations) {
     tdUpTime.textContent = up?.arrivalText || "-";
     tr.appendChild(tdUpTime);
 
-    // 2️⃣ 상행 🚌 (버스 위치 강조)
+    // 2️⃣ 상행 🚌
     const tdUpBus = document.createElement("td");
-    if (up?.busPresent) {
-      tdUpBus.innerHTML = "🚌";
-      tdUpBus.style.color = "red";
-      tdUpBus.style.fontWeight = "bold";
-    } else {
-      tdUpBus.innerHTML = "-";
-    }
+    tdUpBus.innerHTML = up?.busPresent ? "🚌" : "-";
+    tdUpBus.style.color = up?.busPresent ? "red" : "";
+    tdUpBus.style.fontWeight = up?.busPresent ? "bold" : "";
     tdUpBus.classList.add("bus");
     tr.appendChild(tdUpBus);
 
@@ -127,15 +115,11 @@ function renderTable(stations) {
     tdDownStation.textContent = down?.stopName || "-";
     tr.appendChild(tdDownStation);
 
-    // 5️⃣ 하행 🚌 (버스 위치 강조)
+    // 5️⃣ 하행 🚌
     const tdDownBus = document.createElement("td");
-    if (down?.busPresent) {
-      tdDownBus.innerHTML = "🚌";
-      tdDownBus.style.color = "blue";
-      tdDownBus.style.fontWeight = "bold";
-    } else {
-      tdDownBus.innerHTML = "-";
-    }
+    tdDownBus.innerHTML = down?.busPresent ? "🚌" : "-";
+    tdDownBus.style.color = down?.busPresent ? "blue" : "";
+    tdDownBus.style.fontWeight = down?.busPresent ? "bold" : "";
     tdDownBus.classList.add("bus");
     tr.appendChild(tdDownBus);
 

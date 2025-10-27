@@ -24,14 +24,15 @@ public class BusStopServiceImpl implements BusStopService {
     @Value("${bus.api.key}")
     private String serviceKey;
 
+    // ✅ 노선별 정류장 목록 조회 API (정확한 endpoint)
     private static final String API_URL = "http://openapitraffic.daejeon.go.kr/api/rest/busRouteInfo/getStaionByRoute";
 
     @Override
     public List<BusStopDto> getStationsByRoute(String busRouteId) {
         List<BusStopDto> stationList = new ArrayList<>();
         try {
-            String urlStr = API_URL + "?busRouteId=" + busRouteId + "&serviceKey=" + serviceKey + "&reqPage=1";
-           // System.out.println("요청 URL: " + urlStr);
+            String urlStr = API_URL + "?busRouteId=" + busRouteId + "&serviceKey=" + serviceKey;
+            System.out.println("🚏 [정류장 요청 URL] " + urlStr);
 
             URL url = new URL(urlStr);
             HttpURLConnection conn = (HttpURLConnection) url.openConnection();
@@ -51,9 +52,12 @@ public class BusStopServiceImpl implements BusStopService {
             conn.disconnect();
 
             String responseXml = sb.toString();
-            //System.out.println("응답 XML: " + responseXml);
+            System.out.println("📩 [정류장 응답 XML] \n" + responseXml.substring(0, Math.min(500, responseXml.length())) + "...");
+            // 너무 길면 앞부분만 출력
 
             stationList = parseStations(responseXml);
+
+            System.out.println("✅ [정류장 파싱 완료] 총 " + stationList.size() + "개 정류장 불러옴");
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -76,16 +80,27 @@ public class BusStopServiceImpl implements BusStopService {
                     Element el = (Element) node;
                     BusStopDto stop = new BusStopDto();
 
-                    stop.setStopId(getTagValue("stopId", el));
+                    // ✅ 여기서 정확히 태그 이름 일치시켜야 함
+                    stop.setBusNodeId(getTagValue("BUS_NODE_ID", el)); // 7자리 내부용
+                    stop.setStopId(getTagValue("BUS_STOP_ID", el));    // ✅ 5자리 arsId
                     stop.setStopName(getTagValue("BUSSTOP_NM", el));
                     stop.setGpsLati(getTagValue("GPS_LATI", el));
                     stop.setGpsLong(getTagValue("GPS_LONG", el));
-                    stop.setBusNodeId(getTagValue("BUS_NODE_ID", el));
-                    // 순서(SEQUENCE) 처리
-                    stop.setSeq(parseIntOrDefault(getTagValue("SEQ", el), i + 1));
 
-               
+                    String seqStr = getTagValue("BUSSTOP_SEQ", el);
+                    stop.setSeq(parseIntOrDefault(seqStr, i + 1));
+
                     stations.add(stop);
+
+                    // 📜 콘솔 출력
+                    System.out.printf("  [%02d] %s (%s) - stopId=%s, nodeId=%s, seq=%s%n",
+                            i + 1,
+                            stop.getStopName(),
+                            busStopIdSafe(stop),
+                            stop.getStopId(),
+                            stop.getBusNodeId(),
+                            stop.getSeq()
+                    );
                 }
             }
         } catch (Exception e) {
@@ -94,7 +109,11 @@ public class BusStopServiceImpl implements BusStopService {
         return stations;
     }
 
-    // Null 빈 문자열을 기본값으로 안전하게 처리하는 메서드
+    private static String busStopIdSafe(BusStopDto dto) {
+        return (dto.getStopId() != null && !dto.getStopId().isEmpty()) ? dto.getStopId() : "❌ 없음";
+    }
+
+    // 안전한 숫자 변환
     private int parseIntOrDefault(String value, int defaultVal) {
         if (value == null || value.isEmpty()) return defaultVal;
         try {
@@ -111,6 +130,5 @@ public class BusStopServiceImpl implements BusStopService {
         if (node == null || node.getFirstChild() == null) return null;
         return node.getFirstChild().getNodeValue().trim();
     }
-    
 }
 
