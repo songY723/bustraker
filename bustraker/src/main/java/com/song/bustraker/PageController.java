@@ -15,4 +15,9 @@ public class PageController {
     public String stationsPage() {
         return "forward:/stations.html";
     }
+    
+    @GetMapping("/register")
+    public String registerPage() {
+        return "forward:/register.html";
+    }
 }

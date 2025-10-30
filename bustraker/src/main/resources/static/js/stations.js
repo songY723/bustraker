@@ -27,40 +27,41 @@ async function loadData(routeId) {
     });
 
     // 3️⃣ 각 정류장 도착 정보 불러오기
-  const arrivalPromises = stations.map(station =>
-  fetch(`/api/arrivalByStop?busStopId=${station.stopId}&busRouteId=${routeId}`)
-    .then(res => {res.json()
-      console.log(arr[0]);
-    })
-    .then(arr => {
-      if (arr && arr.length > 0) {
-        const a = arr[0];
-        let extimeMin = 0; // <-- 여기 꼭 선언
-        console.log(arr[0]);
-        if (a.extimeMin > 0) {
-          extimeMin = a.extimeMin;
-        } else if (a.extimeSec > 0) {
-          extimeMin = Math.ceil(a.extimeSec / 60);
-        }
+    const arrivalPromises = stations.map(station =>
+      fetch(`/api/arrivalByStop?busStopId=${station.stopId}&busRouteId=${routeId}`)
+        .then(res => res.json()) // ✅ 반드시 return 필요
+        .then(arr => {
+          if (arr && arr.length > 0) {
+            const a = arr[0];
+            let extimeMin = 0;
 
-        // 도착 텍스트 설정
-        if (extimeMin === 1) {
-          station.arrivalText = "출발대기중";
-        } else if (extimeMin > 1) {
-          station.arrivalText = "곧 도착";
-        } else {
+            // ⏱ 분 계산
+            if (a.extimeMin > 0) {
+              extimeMin = a.extimeMin;
+            } else if (a.extimeSec > 0) {
+              extimeMin = Math.ceil(a.extimeSec / 60);
+            }
+
+            // 🚏 도착 텍스트 설정
+            if (extimeMin <= 1) {
+              station.arrivalText = "출발대기중";
+              
+            } else if (extimeMin === 2) {
+              station.arrivalText = "곧 도착";
+            } else {
+              station.arrivalText = `${extimeMin}분 후 도착`;
+            }
+
+          } else {
+            station.arrivalText = "-";
+          }
+          return station;
+        })
+        .catch(() => {
           station.arrivalText = "-";
-        }
-      } else {
-        station.arrivalText = "-";
-      }
-      return station;
-    })
-    .catch(() => {
-      station.arrivalText = "-";
-      return station;
-    })
-);
+          return station;
+        })
+    );
 
     await Promise.all(arrivalPromises);
 

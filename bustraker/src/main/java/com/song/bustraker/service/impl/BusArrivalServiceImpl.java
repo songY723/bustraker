@@ -43,7 +43,7 @@ public class BusArrivalServiceImpl implements BusArrivalService {
     public List<ArrivalInfoDto> getArrivalInfoByStop(String busStopId, String busRouteId) {
         List<ArrivalInfoDto> list = new ArrayList<>();
         try {
-            String urlStr = ARRIVAL_API_URL + "?serviceKey=" + serviceKey + "&arsId=" + busStopId;
+            String urlStr = ARRIVAL_API_URL + "?arsId=" + busStopId + "&serviceKey=" + serviceKey;
             URL url = new URL(urlStr);
             HttpURLConnection conn = (HttpURLConnection) url.openConnection();
             conn.setRequestMethod("GET");
