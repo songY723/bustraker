@@ -1,1 +1,1 @@
-web: java -jar target/bustraker.jar
+java -jar target/bustraker.jar
