@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    padding: 20px;
+  }
+  h1 {
+    text-align: center;
+    margin-bottom: 20px;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  th, td {
+    border: 1px solid #ccc;
+    padding: 8px;
+    text-align: center;
+  }
+  th {
+    background-color: #f4f4f4;
+  }
+  .bus {
+  font-size: 18px;
+  text-align: center;
+}
+
+.bus.red {
+  color: red;
+  font-weight: bold;
+}
+
+.bus.blue {
+  color: blue;
+  font-weight: bold;
+}
+</style>
+</head>
+<body>
+  <h1>정류장 및 버스 위치</h1>
+
+  <table>
+  <thead>
+    <tr>
+      <th>도착시간</th>
+      <th>상행 🚌</th>
+      <th>상행 정류장</th>
+      <th>하행 정류장</th>
+      <th>하행 🚌</th>
+      <th>도착시간</th>
+    </tr>
+  </thead>
+  <tbody id="stationTable">
+    <tr><td colspan="6">로딩 중...</td></tr>
+  </tbody>
+</table>
+
+
+  <script src="js/stations.js"></script>
+</body>
+</html>

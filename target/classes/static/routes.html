@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>전체 노선 목록</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+    }
+    h1, h2 {
+      color: #333;
+    }
+    ul {
+      list-style: none;
+      padding-left: 0;
+    }
+    li {
+      margin: 5px 0;
+    }
+    a {
+      text-decoration: none;
+      color: blue;
+      cursor: pointer;
+    }
+    a:hover {
+      text-decoration: underline;
+    }
+    #stations {
+      margin-top: 20px;
+    }
+
+    /* 그룹박스 스타일 */
+    .group-box {
+      border: 1px solid #ccc;
+      border-radius: 10px;
+      margin: 10px 0;
+      padding: 10px;
+      background-color: #f9f9f9;
+    }
+
+    .group-title {
+      margin-bottom: 10px;
+    }
+  </style>
+  
+</head>
+<body>
+
+<h1>전체 노선 목록</h1>
+
+<!-- ✅ 여기를 ul → div 로 변경 -->
+<div id="routesList">
+  <p>로딩 중...</p>
+</div>
+
+<div id="stations">
+  <h2>정류장 목록</h2>
+  <ul id="stationsList">
+    <li>노선을 선택하세요.</li>
+  </ul>
+</div>
+<script src="js/routes.js"></script>
+</body>
+
+</html>
