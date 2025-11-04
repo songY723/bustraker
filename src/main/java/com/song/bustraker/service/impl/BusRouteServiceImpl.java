@@ -24,14 +24,16 @@ public class BusRouteServiceImpl implements BusRouteService {
     @Value("${bus.api.key}")
     private String serviceKey;
 
-    private static final String API_URL = "https://openapitraffic.daejeon.go.kr/api/rest/busRouteInfo/getRouteInfoAll";
+    private static final String API_URL = "http://openapitraffic.daejeon.go.kr/api/rest/busRouteInfo/getRouteInfoAll";
 
     @Override
     public List<BusRouteDto> getAllRoutes() {
         List<BusRouteDto> routes = new ArrayList<>();
         try {
+            System.out.println("✅ [BusRouteServiceImpl] getAllRoutes() 실행됨");
             String urlStr = API_URL + "?serviceKey=" + serviceKey + "&reqPage=1";
-           
+            System.out.println("🔗 요청 URL: " + urlStr);
+
 
             URL url = new URL(urlStr);
             HttpURLConnection conn = (HttpURLConnection) url.openConnection();

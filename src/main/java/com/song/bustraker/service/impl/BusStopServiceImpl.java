@@ -25,13 +25,14 @@ public class BusStopServiceImpl implements BusStopService {
     private String serviceKey;
 
     // ✅ 노선별 정류장 목록 조회 API (정확한 endpoint)
-    private static final String API_URL = "https://openapitraffic.daejeon.go.kr/api/rest/busRouteInfo/getStaionByRoute";
+    private static final String API_URL = "http://openapitraffic.daejeon.go.kr/api/rest/busRouteInfo/getStaionByRoute";
 
     @Override
     public List<BusStopDto> getStationsByRoute(String busRouteId) {
         List<BusStopDto> stationList = new ArrayList<>();
         try {
             String urlStr = API_URL + "?busRouteId=" + busRouteId + "&serviceKey=" + serviceKey;
+            System.out.println("✅ [BusstopceImpl] getstaionlRoutes() 실행됨");
             System.out.println("🚏 [정류장 요청 URL] " + urlStr);
 
             URL url = new URL(urlStr);
