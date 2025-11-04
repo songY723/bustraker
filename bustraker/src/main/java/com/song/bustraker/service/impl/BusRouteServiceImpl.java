@@ -30,8 +30,10 @@ public class BusRouteServiceImpl implements BusRouteService {
     public List<BusRouteDto> getAllRoutes() {
         List<BusRouteDto> routes = new ArrayList<>();
         try {
+        	System.out.println("✅ [BusRouteServiceImpl] getAllRoutes() 실행됨");
             String urlStr = API_URL + "?serviceKey=" + serviceKey + "&reqPage=1";
-           
+            
+            System.out.println("🔗 요청 URL: " + urlStr);
 
             URL url = new URL(urlStr);
             HttpURLConnection conn = (HttpURLConnection) url.openConnection();
