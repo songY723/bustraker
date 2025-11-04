@@ -24,7 +24,7 @@ public class BusRouteServiceImpl implements BusRouteService {
     @Value("${bus.api.key}")
     private String serviceKey;
 
-    private static final String API_URL = "https://openapitraffic.daejeon.go.kr/api/rest/busRouteInfo/getRouteInfoAll";
+    private static final String API_URL = "http://openapitraffic.daejeon.go.kr/api/rest/busRouteInfo/getRouteInfoAll";
 
     @Override
     public List<BusRouteDto> getAllRoutes() {
