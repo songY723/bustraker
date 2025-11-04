@@ -24,7 +24,7 @@ public class BusPosServiceImpl implements BusPosService {
     private String serviceKey;
 
     private static final String API_URL =
-        "https://openapitraffic.daejeon.go.kr/api/rest/busposinfo/getBusPosByRtid";
+        "http://openapitraffic.daejeon.go.kr/api/rest/busposinfo/getBusPosByRtid";
 
     @Override
     public List<BusPosDto> getBusPositions(String busRouteId) {
