@@ -8,7 +8,7 @@ public class HomeController {
 
     @GetMapping("/")
     public String home() {
-        return "Hello, Bus Tracker!";
+        return "forward:/routes.html";
     }
 
     @GetMapping("/test")
